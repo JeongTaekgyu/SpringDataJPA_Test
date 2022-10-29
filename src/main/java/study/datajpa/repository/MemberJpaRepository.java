@@ -49,4 +49,20 @@ public class MemberJpaRepository {
                 .setParameter("age", age)
                 .getResultList();
     }
+
+    public List<Member> findByPage(int age, int offset, int limit){
+        return em.createQuery("select m from Member m where m.age = :age order by m.username desc")
+                .setParameter("age", age)
+                .setFirstResult(offset) // offset 부터 가져오겠다.
+                .setMaxResults(limit) // limit 개수만큼 가져오겟다.
+                .getResultList();    // 리스트로 넘긴다.
+    }
+
+    public long totalCount(int age) {
+        return em.createQuery("select count(m) from Member m where m.age = :age", Long.class)
+                .setParameter("age", age)
+                .getSingleResult(); // SingleResult로 넘긴다.
+
+
+    }
 }
