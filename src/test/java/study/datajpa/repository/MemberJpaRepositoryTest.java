@@ -101,4 +101,20 @@ public class MemberJpaRepositoryTest {
         assertThat(members.size()).isEqualTo(3); // limit를 3으로 했기때문에 members.size() 도 3이다.
         assertThat(totalCount).isEqualTo(5);
     }
+
+    @Test
+    public void bulkUpdate() {
+        // given
+        memberJpaRepository.save(new Member("member1", 17));
+        memberJpaRepository.save(new Member("member2", 13));
+        memberJpaRepository.save(new Member("member3", 20));
+        memberJpaRepository.save(new Member("member4", 40));
+        memberJpaRepository.save(new Member("member5", 24));
+
+        // when
+        int resultCount = memberJpaRepository.bulkAgePlus(20);
+
+        // then
+        assertThat(resultCount).isEqualTo(3);
+    }
 }

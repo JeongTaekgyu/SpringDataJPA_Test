@@ -12,6 +12,8 @@ import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 import study.datajpa.entity.Team;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +28,8 @@ class MemberRepositoryTest {
 
     @Autowired MemberRepository memberRepository;
     @Autowired TeamRepository teamRepository;
+    @PersistenceContext
+    EntityManager em;
 
     @Test
     public void testMember() {
@@ -162,6 +166,7 @@ class MemberRepositoryTest {
         PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
         // when
         Page<Member> page = memberRepository.findByAge(age, pageRequest);
+        // 엔티티 그대로 반환하면 안되니까 Dto로 반환한다.
 //        Page<MemberDto> toMap = page.map(m -> new MemberDto(m.getId(), m.getUsername(), null));
 
         // then
@@ -174,5 +179,33 @@ class MemberRepositoryTest {
         assertThat(page.isFirst()).isTrue();
         assertThat(page.hasNext()).isTrue();
 
+    }
+
+    @Test
+    public void bulkUpdate() {
+        /*참고: 벌크 연산은 영속성 컨텍스트를 무시하고 실행하기 때문에, 영속성 컨텍스트에 있는 엔티티의 상태와
+        DB에 엔티티 상태가 달라질 수 있다.
+        -> 권장하는 방안
+        1. 영속성 컨텍스트에 엔티티가 없는 상태에서 벌크 연산을 먼저 실행한다.
+        2. 부득이하게 영속성 컨텍스트에 엔티티가 있으면 벌크 연산 직후 영속성 컨텍스트를 초기화 한다.*/
+
+        // given
+        memberRepository.save(new Member("member1", 17));
+        memberRepository.save(new Member("member2", 13));
+        memberRepository.save(new Member("member3", 20));
+        memberRepository.save(new Member("member4", 40));
+        memberRepository.save(new Member("member5", 24));
+
+        // when
+        int resultCount = memberRepository.bulkAgePlus(20);
+        // 이게 2번 방법 (영속성 컨텍스트에 엔티티가 있으면 벌크 연산 직후 영속성 컨텍스트를 초기화 한다.)
+//        em.clear();
+
+        List<Member> result = memberRepository.findByUsername("member4");
+        Member member4 = result.get(0);
+        System.out.println("member5 ============ " + member4);
+
+        // then
+        assertThat(resultCount).isEqualTo(3);
     }
 }
