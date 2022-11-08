@@ -244,5 +244,37 @@ class MemberRepositoryTest {
         }
     }
 
+    @Test
+    public void queryHint() throws Exception {
+        //given
+        Member member1 = new Member("member1", 10);
+        memberRepository.save(member1);
+        em.flush();
+        em.clear();
 
+        //when
+        //Member member = memberRepository.findById(member1.getId()).get();
+        //member.setUsername("member2");
+        Member findMember = memberRepository.findReadOnlyByUsername("member1");
+        findMember.setUsername("member2");
+        // 변경감지(더티체킹)의 치명적인 단점은
+        // 변경감지를 하려면 원본이 있어야한다. 즉, 데이터 2개가 필요하다
+
+        // @QueryHints 로 readOnly true 하면 update문은 나가지 않지만 Member findMember의 username은 변경 됐다.
+        // 하지만 db에 반영은 안된다?
+        System.out.println("~~~ : "+ findMember.getUsername());
+        em.flush(); // findReadOnlyByUsername 메서드에서 readOnly true 로 햇기 때문에 Update Query 실행X
+    }
+
+    @Test
+    public void lock() {
+        //given
+        Member member1 = new Member("member1", 10);
+        memberRepository.save(member1);
+        em.flush();
+        em.clear();
+
+        // when
+        List<Member> result = memberRepository.findLockByUsername("member1");
+    }
 }
